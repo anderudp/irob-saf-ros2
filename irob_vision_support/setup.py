@@ -20,7 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'fiducial_detector = irob_vision_support.fiducial_detector:main'
+            'cylmarker_detector = irob_vision_support.cylmarker_detector:main'
         ],
     },
 )
