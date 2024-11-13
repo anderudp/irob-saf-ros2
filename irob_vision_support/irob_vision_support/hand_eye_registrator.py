@@ -6,6 +6,8 @@ from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from rclpy.duration import Duration
 from geometry_msgs.msg import PoseStamped, Pose
+import rclpy.time
+import rclpy.timer
 from sensor_msgs.msg import JointState, Joy
 from std_msgs.msg import String
 
@@ -22,7 +24,7 @@ class HandEyeRegistrator(Node):
         self.poses_to_save = []
         self.robot_positions = np.zeros((0,3))
         self.cylmarker_positions = np.zeros((0,3))
-        self.cylmarker_tf = None
+        self.cylmarker_tf : PoseStamped = None
         self.clutch_N = 0
 
         self.cylmarker_tf_sub = self.create_subscription(
@@ -47,19 +49,19 @@ class HandEyeRegistrator(Node):
             10)
     
 
-    def cb_cylmarker_tf(self, msg):
+    def cb_cylmarker_tf(self, msg: PoseStamped):
         """Callback function for cylmarker pose."""
         self.cylmarker_tf = msg
 
-    def cb_measured_cp(self, msg):
+    def cb_measured_cp(self, msg: PoseStamped):
         """Callback function for measured_cp."""
         self.measured_cp = msg
     
-    def cb_jaw_measured_js(self, msg):
+    def cb_jaw_measured_js(self, msg: JointState):
         """Callback function jaw/measured_js"""
         self.measured_jaw = msg
 
-    def cb_manip_clutch(self, msg):
+    def cb_manip_clutch(self, msg: Joy):
         """Callback function when clutch button is pressed.
         Collect one sample from the positions.
         """
@@ -71,8 +73,8 @@ class HandEyeRegistrator(Node):
     
     def gather_actual_position(self):
         """Gather a single position from the camera and the robot."""
-        self.get_clock().sleep_for(Duration(seconds=0.5))  # This might not work
-        if ((self.get_clock().now().to_sec() - self.cylmarker_tf.header.stamp.to_sec()) < 0.4):  # This might not work either
+        # SLEEP GOES HERE
+        if ((self.get_clock().now() - self.cylmarker_tf.header.stamp) < 4e8):  # 0.4s in nanosec
             robot_pos = np.array([self.measured_cp.pose.position.x,
                                 self.measured_cp.pose.position.y,
                                 self.measured_cp.pose.position.z]).T
