@@ -32,7 +32,7 @@ import numpy as np
 # R = 3x3 rotation matrix
 # t = 3x1 column vector
 
-def rigid_transform_3D(A, B):
+def rigid_transform_3D(A: np.ndarray, B: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     assert A.shape == B.shape
 
     num_rows, num_cols = A.shape
