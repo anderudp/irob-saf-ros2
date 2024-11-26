@@ -109,10 +109,11 @@ class CylmarkerDetector(Node):
         # The "align_to" is the stream type to which we plan to align depth frames.
         align_to = rs.stream.color
         align = rs.align(align_to)
+        bg_removed = None
 
         # Take picture
         try:
-            while rclpy.ok():
+            while rclpy.ok() and bg_removed is None:
                 # Get frameset of color and depth
                 frames = self.pipeline.wait_for_frames()
 
@@ -143,12 +144,11 @@ class CylmarkerDetector(Node):
                     cv2.imwrite(f"{self.raw_images_path}/{time}_raw.png", cv2.cvtColor(color_image, cv2.COLOR_BGR2RGB))
                 if save_processed:
                     cv2.imwrite(f"{self.raw_images_path}/{time}_bgremoved.png", cv2.cvtColor(bg_removed, cv2.COLOR_BGR2RGB))
-
-                return bg_removed
                 
         finally:
             self.pipeline.stop()
-            return None
+
+        return bg_removed
 
 
 if __name__ == '__main__':
