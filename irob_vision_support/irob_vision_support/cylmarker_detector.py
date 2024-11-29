@@ -56,6 +56,8 @@ class CylmarkerDetector(Node):
         self.config.enable_stream(rs.stream.depth, self.width, self.height, rs.format.z16, self.fps)
         self.config.enable_stream(rs.stream.color, self.width, self.height, rs.format.bgr8, self.fps)
 
+        self.latest_stamp = None
+
 
     def estimate(self, image: np.ndarray):
         """Attempts pose estimation on the raw image,
@@ -82,7 +84,7 @@ class CylmarkerDetector(Node):
         p.pose.position.x = pose_pred[0][3]
         p.pose.position.y = pose_pred[1][3]
         p.pose.position.z = pose_pred[2][3]
-        p.header.stamp = self.get_clock().now().to_msg()
+        p.header.stamp = self.latest_stamp
         self.cylmarker_tf_pub.publish(p)
 
 
@@ -139,11 +141,11 @@ class CylmarkerDetector(Node):
                 bg_removed = np.where((depth_image_3d > clipping_distance) 
                                       | (depth_image_3d <= 0), grey_color, color_image)
 
-                time = self.get_clock().now().nanoseconds
+                self.latest_stamp = self.get_clock().now().nanoseconds
                 if save_raw:
-                    cv2.imwrite(f"{self.raw_images_path}/{time}_raw.png", cv2.cvtColor(color_image, cv2.COLOR_BGR2RGB))
+                    cv2.imwrite(f"{self.raw_images_path}/{self.latest_stamp}_raw.png", cv2.cvtColor(color_image, cv2.COLOR_BGR2RGB))
                 if save_processed:
-                    cv2.imwrite(f"{self.raw_images_path}/{time}_bgremoved.png", cv2.cvtColor(bg_removed, cv2.COLOR_BGR2RGB))
+                    cv2.imwrite(f"{self.raw_images_path}/{self.latest_stamp}_bgremoved.png", cv2.cvtColor(bg_removed, cv2.COLOR_BGR2RGB))
                 
         finally:
             self.pipeline.stop()
