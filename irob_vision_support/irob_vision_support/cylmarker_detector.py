@@ -73,7 +73,8 @@ class CylmarkerDetector(Node):
         data_pattern, data_marker = load_pttrn_and_marker_data(
             pattern_file_path=self.pattern_config_path,
             marker_file_data=self.marker_config_path)
-        
+
+        # Realsense specific, use data_cam_calib for other cameras
         dist_coeff_data = self.intrinsics.coeffs
 
         cam_matrix = [[self.intrinsics.fx, 0, self.intrinsics.ppx],
