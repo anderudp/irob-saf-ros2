@@ -57,6 +57,13 @@ class CylmarkerDetector(Node):
         self.config.enable_stream(rs.stream.color, self.width, self.height, rs.format.bgr8, self.fps)
 
 
+    def set_exposure(self, exposure):
+        """Set the camera exposure manually."""
+
+        rgb_cam_sensor = self.pipeline.get_active_profile().get_device().query_sensors()[1]
+        rgb_cam_sensor.set_option(rs.option.exposure, exposure)
+
+
     def estimate(self, image: np.ndarray):
         """Attempts pose estimation on the raw image,
         then publishes the result.
@@ -70,6 +77,7 @@ class CylmarkerDetector(Node):
         data_pattern, data_marker = load_pttrn_and_marker_data(
             pattern_file_path=self.pattern_config_path,
             marker_file_data=self.marker_config_path)
+        
         
         pose_pred = pose_estimation.estimate_poses(data_cam_calib, data_config, data_pattern, data_marker)
 
@@ -137,6 +145,10 @@ class CylmarkerDetector(Node):
                 #depth image is 1 channel, color is 3 channels
                 bg_removed = np.where((depth_image_3d > clipping_distance) 
                                       | (depth_image_3d <= 0), grey_color, color_image)
+
+                intrinsics = aligned_depth_frame.profile.as_video_stream_profile().get_intrinsics()
+                print(intrinsics)
+
 
                 time = self.get_clock().now().nanoseconds
                 if save_raw:
