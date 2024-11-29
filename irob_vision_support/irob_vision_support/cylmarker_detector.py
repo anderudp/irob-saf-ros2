@@ -55,6 +55,7 @@ class CylmarkerDetector(Node):
         self.config = rs.config()
         self.config.enable_stream(rs.stream.depth, self.width, self.height, rs.format.z16, self.fps)
         self.config.enable_stream(rs.stream.color, self.width, self.height, rs.format.bgr8, self.fps)
+        self.intrinsics = None
 
         self.latest_stamp = None
 
@@ -73,8 +74,13 @@ class CylmarkerDetector(Node):
             pattern_file_path=self.pattern_config_path,
             marker_file_data=self.marker_config_path)
         
+        dist_coeff_data = self.intrinsics.coeffs
+
+        cam_matrix = [[self.intrinsics.fx, 0, self.intrinsics.ppx],
+                      [0, self.intrinsics.fy, self.intrinsics.ppy],
+                      [0, 0, 1]]
         
-        pose_pred = pose_estimation.estimate_poses(data_cam_calib, data_config, data_pattern, data_marker)
+        pose_pred = pose_estimation.estimate_poses(image, cam_matrix, dist_coeff_data, data_config, data_pattern, data_marker)
 
         p = PoseStamped()
         q = quaternion_from_matrix(pose_pred)
@@ -142,6 +148,8 @@ class CylmarkerDetector(Node):
                 bg_removed = np.where((depth_image_3d > clipping_distance) 
                                       | (depth_image_3d <= 0), grey_color, color_image)
 
+
+                self.intrinsics = (aligned_depth_frame.profile.as_video_stream_profile().get_intrinsics())
                 self.latest_stamp = self.get_clock().now().nanoseconds
                 if save_raw:
                     cv2.imwrite(f"{self.raw_images_path}/{self.latest_stamp}_raw.png", cv2.cvtColor(color_image, cv2.COLOR_BGR2RGB))
