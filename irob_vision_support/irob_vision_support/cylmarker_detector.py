@@ -10,12 +10,11 @@ import os
 from rclpy.node import Node
 from rclpy.executors import ExternalShutdownException
 from geometry_msgs.msg import PoseStamped
-import pyrealsense2 as rs  # <- Linting borked, should fix
+import pyrealsense2 as rs
 from cv_bridge import CvBridge
 import matplotlib.pyplot as plt
-from cylmarker_utils.load_data import load_config_and_cam_calib_data, load_pttrn_and_marker_data
-from cylmarker_utils.pose_estimation import pose_estimation
-from cylmarker_utils.keypoints import Pattern
+from irob_vision_support.cylmarker_utils.load_data import load_config_and_cam_calib_data, load_pttrn_and_marker_data
+from irob_vision_support.cylmarker_utils.pose_estimation import pose_estimation
 from tf_transformations import quaternion_from_matrix
 
 class CylmarkerDetector(Node):
@@ -163,7 +162,7 @@ class CylmarkerDetector(Node):
         return bg_removed
 
 
-if __name__ == '__main__':
+def main():
     rclpy.init()
     detector = CylmarkerDetector()
     image = detector.take_photo_realsense()
@@ -175,3 +174,6 @@ if __name__ == '__main__':
         pass
     finally:
         rclpy.try_shutdown()
+
+if __name__ == '__main__':
+    main()

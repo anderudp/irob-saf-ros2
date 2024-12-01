@@ -1,0 +1,3 @@
+[console_scripts]
+cylmarker_detector = irob_vision_support.cylmarker_detector:main
+
