@@ -1,0 +1,20 @@
+{
+    "python.autoComplete.extraPaths": [
+        "/root/ros2_ws/build/irob_vision_support",
+        "/root/ros2_ws/install/irob_vision_support/lib/python3.8/site-packages",
+        "/root/ros2_ws/build/irob_utils",
+        "/root/ros2_ws/install/irob_utils/lib/python3.8/site-packages",
+        "/root/ros2_ws/build/irob_subtask_logic",
+        "/root/ros2_ws/install/irob_subtask_logic/lib/python3.8/site-packages",
+        "/opt/ros/foxy/lib/python3.8/site-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/root/ros2_ws/build/irob_vision_support",
+        "/root/ros2_ws/install/irob_vision_support/lib/python3.8/site-packages",
+        "/root/ros2_ws/build/irob_utils",
+        "/root/ros2_ws/install/irob_utils/lib/python3.8/site-packages",
+        "/root/ros2_ws/build/irob_subtask_logic",
+        "/root/ros2_ws/install/irob_subtask_logic/lib/python3.8/site-packages",
+        "/opt/ros/foxy/lib/python3.8/site-packages"
+    ]
+}
