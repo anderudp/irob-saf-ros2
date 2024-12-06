@@ -12,6 +12,7 @@ from scipy.spatial.transform import Rotation
 from scipy.spatial.transform import Slerp
 import yaml
 import matplotlib.pyplot as plt
+import time
 
 class HandEyeRegistrator(Node):
     def __init__(self):
@@ -83,7 +84,7 @@ class HandEyeRegistrator(Node):
     
     def gather_actual_position(self):
         """Gather a single position from the camera and the robot."""
-        # TODO: 0.5s sleep
+        time.sleep(0.5)
         if ((self.get_clock().now() - self.cylmarker_tf.header.stamp) < 4e8):  # 0.4s in nanosec
             robot_pos = np.array([self.measured_cp.pose.position.x,
                                 self.measured_cp.pose.position.y,
@@ -188,7 +189,7 @@ class HandEyeRegistrator(Node):
 
             #rospy.loginfo(p)
             self.servo_cp_pub.publish(p)
-            rate.sleep()    # Sleep to run with the desired rate
+            rclpy.spin_once(self)
 
 
     def save_robot_poses(self):
@@ -305,9 +306,9 @@ if __name__ == '__main__':
     else:
         print("Please define a correct mode (simple, save, auto). Exiting...")
 
-    try:
-        rclpy.spin(reg)
-    except (ExternalShutdownException, KeyboardInterrupt):
-        pass
-    finally:
-        rclpy.try_shutdown()
+    # try:
+    #     #rclpy.spin(reg)
+    # except (ExternalShutdownException, KeyboardInterrupt):
+    #     pass
+    # finally:
+    #     rclpy.try_shutdown()
