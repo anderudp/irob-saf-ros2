@@ -7,7 +7,7 @@ from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from sensor_msgs.msg import JointState, Joy
 from geometry_msgs.msg import PoseStamped, Pose
-from irob_utils.irob_utils.rigid_transform_3D import rigid_transform_3D
+from irob_utils.rigid_transform_3D import rigid_transform_3D
 from scipy.spatial.transform import Rotation
 from scipy.spatial.transform import Slerp
 import yaml

@@ -26,7 +26,7 @@ def load_yaml_data(path):
             return yaml.load(f_tmp, Loader=yaml.FullLoader)
 
 
-def load_config_and_cam_calib_data(config_file_path: str, cam_calib_file_path: str):
+def load_config_and_cam_calib_data(config_file_path, cam_calib_file_path):
     # Load config file data
     config_file_data = load_yaml_data(config_file_path)
 
@@ -36,7 +36,7 @@ def load_config_and_cam_calib_data(config_file_path: str, cam_calib_file_path: s
     return config_file_data, cam_calib_data
 
 
-def load_pttrn_and_marker_data(pttrn_file_path: str, marker_file_path: str):
+def load_pttrn_and_marker_data(pttrn_file_path, marker_file_path):
     # Load pattern data
     pttrn_file_data = load_yaml_data(pttrn_file_path)
     # Load marker data
