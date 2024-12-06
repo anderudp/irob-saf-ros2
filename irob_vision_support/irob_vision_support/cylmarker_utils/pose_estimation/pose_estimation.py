@@ -153,9 +153,9 @@ def estimate_poses(image: np.ndarray, cam_calib_data, config_file_data, data_ptt
     sequence_length = len(data_pttrn['sequence_0']['code'])
 
     ## Load camera matrix and distortion coefficients
-    cam_matrix = cam_calib_data['camera_matrix']['data']
+    cam_matrix = cam_calib_data['intrinsic']
     cam_matrix = np.reshape(cam_matrix, (3, 3))
-    dist_coeff_data = cam_calib_data['distortion_coefficients']['data'][:4]  # TODO: Check if right
+    dist_coeff_data = cam_calib_data['distortion']
     dist_coeff_np = np.array(dist_coeff_data)
 
     """ Step I - Undistort the input image """
