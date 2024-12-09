@@ -122,11 +122,10 @@ def show_marker_histogram_gray(im, mask_marker_bg):
 def show_features(im, mask_marker_fg):
     marker_fg = cv.bitwise_and(im, im, mask=mask_marker_fg)
     marker_fg[marker_fg!=0] = 255
-    cv.imshow('features', marker_fg)
-    cv.waitKey(0)
+    return marker_fg
 
 
-def marker_segmentation(im, config_file_data):
+def marker_segmentation(im, config_file_data, save_debug_ims = False):
     #print(config_file_data)
     # Segment the marker assuming that it has a unique colour
     im_hsv = cv.cvtColor(im, cv.COLOR_BGR2HSV)
@@ -134,12 +133,15 @@ def marker_segmentation(im, config_file_data):
     mask_marker_bg, marker_area = get_marker_background(im_hsv, config_file_data)
     if mask_marker_bg is None:
         return None, None
+    
     marker_bg = cv.bitwise_and(im, im, mask=mask_marker_bg)
-    #cv.imshow('marker_bg', marker_bg) # TODO: remove
+    if save_debug_ims:
+        cv.imwrite("03a_marker_bg.jpg", marker_bg)
+
     marker_bg_hsv = cv.bitwise_and(im_hsv, im_hsv, mask=mask_marker_bg)
     #show_marker_histogram(im_hsv, mask_marker_bg)
     #show_marker_histogram_gray(im, mask_marker_bg)
     mask_marker_fg = get_marker_foreground(marker_bg_hsv, mask_marker_bg, marker_area, config_file_data)
-    #show_features(im, mask_marker_fg)
+
     return mask_marker_bg, mask_marker_fg
 

@@ -167,7 +167,7 @@ def estimate_poses(image, cam_calib_data, config_file_data, data_pttrn, data_mar
         cv.imwrite("02_undistorted_img.jpg", im)
 
     """ Step II - Segment the marker and detect features """
-    mask_marker_bg, mask_marker_fg = img_segmentation.marker_segmentation(im, config_file_data)
+    mask_marker_bg, mask_marker_fg = img_segmentation.marker_segmentation(im, config_file_data, save_debug_ims = True)
     if mask_marker_bg is None:
         raise Exception("Marker could not be detected.")
     if save_debug_ims:

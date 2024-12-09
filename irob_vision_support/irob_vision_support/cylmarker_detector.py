@@ -91,6 +91,7 @@ def main():
     rclpy.init()
     detector = CylmarkerDetector()
     image = detector.take_photo_usb_webcam(save_raw=True)
+    #image = cv2.imread("/root/ros2_ws/src/irob-saf-ros2/2024-12-06-160510.jpg")
     detector.estimate(image)
 
     try:
