@@ -30,7 +30,6 @@ def get_marker_background_hsv(im_hsv, h_min, h_max, s_min, v_min):
     # Get lower and upper values
     lower, upper = get_hsv_lower_and_upper(h_min, h_max, s_min, s_max, v_min, v_max)
     mask_bg_colour = cv.inRange(im_hsv, lower, upper)
-
     # Erode mask (remove noise, not sure if needed)
     #kernel = np.ones((3, 3), np.uint8)
     #mask_bg_colour = cv.erode(mask_bg_colour, kernel, iterations = 1)
@@ -68,7 +67,7 @@ def get_marker_foreground(im_hsv, mask_marker_bg, marker_area, config_file_data)
     # We will distinguish the foreground and the background using the V channel
     #  the intuition is that the darker parts of the marker should correspond to the keypoints
     th = cv.adaptiveThreshold(im_hsv[:,:,2], 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C,\
-                 cv.THRESH_BINARY_INV, 47, 2) # TODO: 47 is hardcoded
+                 cv.THRESH_BINARY_INV, config_file_data['fg_v_thresh'], 2) # TODO: 47 is hardcoded
     mask_fg_colour = cv.bitwise_and(th, th, mask=mask_marker_bg)
     #cv.imshow('test', th) # TODO: there seems to be alway a big contour that I could remove
     #cv.waitKey(0)
@@ -78,7 +77,6 @@ def get_marker_foreground(im_hsv, mask_marker_bg, marker_area, config_file_data)
     for cntr in contours:
         if cv.contourArea(cntr) < min_cntr_area:
             mask_fg_colour = cv.drawContours(mask_fg_colour, [cntr], -1, (0, 0, 0), -1)
-
     return mask_fg_colour
 
 

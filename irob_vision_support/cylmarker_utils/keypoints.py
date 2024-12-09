@@ -180,8 +180,8 @@ class Pattern:
                     uv_centre, xyz_centre = kpt.get_centre_info()
                     pnts_3d_object.append([[xyz_centre[0]], [xyz_centre[1]], [xyz_centre[2]]])
                     pnts_2d_image.append([[uv_centre[0]], [uv_centre[1]]])
-        pnts_3d_object = np.asarray(pnts_3d_object, dtype=np.float)
-        pnts_2d_image = np.asarray(pnts_2d_image, dtype=np.float)
+        pnts_3d_object = np.asarray(pnts_3d_object, dtype=float)
+        pnts_2d_image = np.asarray(pnts_2d_image, dtype=float)
         return pnts_3d_object, pnts_2d_image
 
 
@@ -361,7 +361,7 @@ def fit_line_and_adjust_keypoint_centres(im, sqnc):
     for kpt in sqnc.list_kpts:
         u, v = kpt.get_centre_uv()
         points.append([[u], [v]])
-    points = np.asarray(points, dtype=np.float)
+    points = np.asarray(points, dtype=float)
     #vx, vy, x0, y0 = cv.fitLine(points=points, distType=cv.DIST_WELSCH, param=0, reps=0.01, aeps=0.01)
     vx, vy, x0, y0 = cv.fitLine(points=points, distType=cv.DIST_FAIR, param=0, reps=0.01, aeps=0.01)
     #, where (vx, vy) is a normalized vector collinear to the line and (x0, y0) is a point on the line

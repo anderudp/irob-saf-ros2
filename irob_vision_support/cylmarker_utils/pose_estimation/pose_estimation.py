@@ -40,7 +40,7 @@ def show_contours_and_lines_and_centroids(im, pttrn):
             for kpt in sqnc.list_kpts:
                 u, v = kpt.get_centre_uv()
                 im = cv.circle(im, (int(round(u)), int(round(v))), radius=2, color=red, thickness=-1)
-    cv.imshow("image", im)
+    return im
     #cv.waitKey(0)
 
 
@@ -59,8 +59,7 @@ def show_axis(im, transf, rvecs, tvecs, cam_matrix, dist_coeff, length_m):
     colors = [(0,0,255), (0,255,0), (255,0,0)] # Red, Green, Blue
     for i in args:
         cv.line(im, frame_centre, tuple(np.rint(imgpts[i+1]).astype(int).ravel()), colors[i], thickness, cv.LINE_AA)
-    cv.imshow("image", im)
-    cv.waitKey(500)
+    return im
 
 
 def get_transf_inv(transf):
@@ -140,13 +139,15 @@ def draw_detected_and_projected_features(rvecs, tvecs, cam_matrix, dist_coeff, p
     return im
 
 
-def estimate_poses(image, cam_calib_data, config_file_data, data_pttrn, data_marker):
+def estimate_poses(image, cam_calib_data, config_file_data, data_pttrn, data_marker, save_debug_ims = False):
     """Estimates the position of the marker.
     Returns its homogenous pose.
     """
-
     if image is None:
         raise Exception("Empty image provided.")
+    
+    if save_debug_ims:
+        cv.imwrite("01_read_image.jpg", image)
     
     ## Load pattern data
     sqnc_max_ind = len(data_pttrn) - 1
@@ -162,10 +163,16 @@ def estimate_poses(image, cam_calib_data, config_file_data, data_pttrn, data_mar
     im = cv.undistort(image, cam_matrix, dist_coeff_np) # undistort each new image
     dist_coeff = None # we don't need to undistort again the same image
 
+    if save_debug_ims:
+        cv.imwrite("02_undistorted_img.jpg", im)
+
     """ Step II - Segment the marker and detect features """
     mask_marker_bg, mask_marker_fg = img_segmentation.marker_segmentation(im, config_file_data)
     if mask_marker_bg is None:
         raise Exception("Marker could not be detected.")
+    if save_debug_ims:
+        cv.imwrite("03_mask_marker_bg.jpg", mask_marker_bg)
+        cv.imwrite("04_mask_marker_fg.jpg", mask_marker_fg)
     
     # Draw segmented background and foreground
     #show_sgmntd_bg_and_fg(im, mask_marker_bg, mask_marker_fg)
@@ -177,7 +184,10 @@ def estimate_poses(image, cam_calib_data, config_file_data, data_pttrn, data_mar
 
     # Estimate pose
     # Draw contours and lines (for visualization)
-    show_contours_and_lines_and_centroids(im, pttrn)
+    if save_debug_ims:
+        lines_countours_image = show_contours_and_lines_and_centroids(im, pttrn)
+        cv.imwrite("05_lines_countours_image.jpg", lines_countours_image)
+
     pnts_3d_object, pnts_2d_image = pttrn.get_data_for_pnp_solver()
     #save_pts_info(im_path, pnts_3d_object, pnts_2d_image)
     
@@ -186,7 +196,10 @@ def estimate_poses(image, cam_calib_data, config_file_data, data_pttrn, data_mar
     if not valid:
         raise Exception("PnP solver failed.")
     
-    #im = draw_detected_and_projected_features(rvec_pred, tvec_pred, cam_matrix, dist_coeff, pttrn, im)
+    if save_debug_ims:
+        features_image = draw_detected_and_projected_features(rvec_pred, tvec_pred, cam_matrix, dist_coeff, pttrn, im)
+        cv.imwrite("06_features_image.jpg", features_image)
+
     show_reproj_error = False #True
     if show_reproj_error:
         reproj_error = get_reprojection_error(pnts_3d_object, rvec_pred, tvec_pred, inliers, cam_matrix, dist_coeff, pnts_2d_image, show_reproj_error, im)
@@ -196,7 +209,9 @@ def estimate_poses(image, cam_calib_data, config_file_data, data_pttrn, data_mar
     transf = np.vstack((transf, [0., 0., 0., 1.])) # Making it homogeneous
 
     # Draw axis
-    show_axis(im, transf, rvec_pred, tvec_pred, cam_matrix, dist_coeff, 0.005)
+    if save_debug_ims:
+        axis_image = show_axis(im, transf, rvec_pred, tvec_pred, cam_matrix, dist_coeff, 0.005)
+        cv.imwrite("07_axis_image.jpg", axis_image)
 
     # Save solution
     # save_pose(img_format, im_path, transf)

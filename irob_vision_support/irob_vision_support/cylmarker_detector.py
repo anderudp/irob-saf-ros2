@@ -7,6 +7,7 @@ import numpy as np
 import rclpy
 import cv2
 import os
+import rclpy.logging
 from rclpy.node import Node
 from rclpy.executors import ExternalShutdownException
 from geometry_msgs.msg import PoseStamped
@@ -31,7 +32,7 @@ class CylmarkerDetector(Node):
         self.declare_parameter('data_path', "")
         
         self.config_folder_path = self.get_parameter('config_folder_path').get_parameter_value().string_value
-        self.cam_calib_config_path = self.config_folder_path + "/camera_info/pappad-jendoscope-aliexpress.yaml"
+        self.cam_calib_config_path = self.config_folder_path + "/camera_info/bark-logitech-c270.yaml"
         self.cylmarker_config_path = self.config_folder_path + "/cylmarker/config.yaml"
         self.marker_config_path = self.config_folder_path + "/cylmarker/marker.yaml"
         self.pattern_config_path = self.config_folder_path + "/cylmarker/pattern.yaml"
@@ -40,7 +41,7 @@ class CylmarkerDetector(Node):
         self.raw_images_path = self.data_path + "/raw_images/"
         self.processed_images_path = self.data_path + "/processed_images/"
         
-        self.image_stamp: Time = None
+        self.image_stamp: Time = self.get_clock().now().to_msg()
         
 
     def estimate(self, image: np.ndarray):
@@ -56,7 +57,7 @@ class CylmarkerDetector(Node):
             pttrn_file_path=self.pattern_config_path,
             marker_file_path=self.marker_config_path)
 
-        pose_pred = pose_estimation.estimate_poses(image, data_cam_calib, data_config, data_pattern, data_marker)
+        pose_pred = pose_estimation.estimate_poses(image, data_cam_calib, data_config, data_pattern, data_marker, save_debug_ims=True)
 
         p = PoseStamped()
         q = quaternion_from_matrix(pose_pred)
@@ -67,11 +68,11 @@ class CylmarkerDetector(Node):
         p.pose.position.x = pose_pred[0][3]
         p.pose.position.y = pose_pred[1][3]
         p.pose.position.z = pose_pred[2][3]
-        p.header.stamp = self.image_stamp
+        p.header.stamp = self.image_stamp.to_msg()
         self.cylmarker_tf_pub.publish(p)
 
 
-    def take_photo(self, save_raw: bool = False):
+    def take_photo_usb_webcam(self, save_raw: bool = False):
         capture = cv2.VideoCapture(0)
         success = False
         frame = None
@@ -84,12 +85,12 @@ class CylmarkerDetector(Node):
             cv2.imwrite(f"{self.raw_images_path}/{self.image_stamp.nanoseconds}_raw.png", frame)
 
         return frame
-
+    
 
 def main():
     rclpy.init()
     detector = CylmarkerDetector()
-    image = detector.take_photo(save_raw=True)
+    image = detector.take_photo_usb_webcam(save_raw=True)
     detector.estimate(image)
 
     try:
