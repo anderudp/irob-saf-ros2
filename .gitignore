@@ -51,4 +51,5 @@ qtcreator-*
 CATKIN_IGNORE
 
 # images
-irob_vision_support/data
+*jpg
+*png
