@@ -1,3 +1,11 @@
+# HSV adjustment utility. Run this as a regular Python script.
+
+config_file_path = "/root/ros2_ws/src/irob-saf-ros2/irob_vision_support/config/cylmarker/config.yaml"
+images_path = "/root/ros2_ws/src/irob-saf-ros2/irob_vision_support/data/raw_images"
+img_format = ".png"
+
+import sys
+sys.path.append('/root/ros2_ws/src/irob-saf-ros2/irob_vision_support')
 from cylmarker_utils import load_data
 from cylmarker_utils.pose_estimation import img_segmentation
 
@@ -76,13 +84,13 @@ def mouse_callback(event, x, y, flags, param):
     trackbar_callback_im(im_ind)
 
 
-def improve_segmentation(config_file_data):
+def improve_segmentation():
     global h_min, h_max, s_min, v_min
     global img_paths
+
     # Initialize values
-    img_dir_path = config_file_data['img_dir_path']
-    img_format = config_file_data['img_format']
-    img_paths = load_data.load_img_paths(img_dir_path, img_format)
+    config_file_data = load_data.load_yaml_data(config_file_path)
+    img_paths = load_data.load_img_paths(images_path, img_format)
     h_min = config_file_data['h_min']
     h_max = config_file_data['h_max']
     s_min = config_file_data['s_min']
@@ -92,11 +100,11 @@ def improve_segmentation(config_file_data):
     print('Press any [key] when finished.')
 
     cv.namedWindow(title_window, cv.WINDOW_NORMAL)
-    cv.createTrackbar("Image", title_window , 0, len(img_paths) - 1, trackbar_callback_im)
-    cv.createTrackbar("h_min", title_window , h_min, 180, trackbar_callback_h_min)
-    cv.createTrackbar("h_max", title_window , h_max, 180, trackbar_callback_h_max)
-    cv.createTrackbar("s_min", title_window , s_min, 255, trackbar_callback_s_min)
-    cv.createTrackbar("v_min", title_window , v_min, 255, trackbar_callback_v_min)
+    cv.createTrackbar("Image", title_window, 0, len(img_paths) - 1, trackbar_callback_im)
+    cv.createTrackbar("h_min", title_window, h_min, 180, trackbar_callback_h_min)
+    cv.createTrackbar("h_max", title_window, h_max, 180, trackbar_callback_h_max)
+    cv.createTrackbar("s_min", title_window, s_min, 255, trackbar_callback_s_min)
+    cv.createTrackbar("v_min", title_window, v_min, 255, trackbar_callback_v_min)
     if len(img_paths) > 0:
         trackbar_callback_im(0)
         cv.setMouseCallback(title_window, mouse_callback)
@@ -108,3 +116,11 @@ def improve_segmentation(config_file_data):
         print('v_min: {}'.format(v_min))
     else:
         print('ERROR: No images found')
+
+
+def main():
+    improve_segmentation()
+
+
+if __name__ == "__main__":
+    main()

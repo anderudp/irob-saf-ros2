@@ -40,6 +40,12 @@ class CylmarkerDetector(Node):
         self.data_path = self.get_parameter('data_path').get_parameter_value().string_value
         self.raw_images_path = self.data_path + "/raw_images/"
         self.processed_images_path = self.data_path + "/processed_images/"
+
+        # Ensure image folders exist
+        if not os.path.exists(self.raw_images_path):
+            os.makedirs(self.raw_images_path)
+        if not os.path.exists(self.processed_images_path):
+            os.makedirs(self.processed_images_path)
         
         self.image_stamp: Time = self.get_clock().now()
         
@@ -57,7 +63,13 @@ class CylmarkerDetector(Node):
             pttrn_file_path=self.pattern_config_path,
             marker_file_path=self.marker_config_path)
 
-        pose_pred = pose_estimation.estimate_poses(image, data_cam_calib, data_config, data_pattern, data_marker, save_debug_ims=True)
+        pose_pred = pose_estimation.estimate_poses(
+            image, 
+            data_cam_calib, 
+            data_config, 
+            data_pattern, 
+            data_marker, 
+            debug_ims_path=self.processed_images_path)  # Set to None if debug images are not needed
 
         p = PoseStamped()
         q = quaternion_from_matrix(pose_pred)
@@ -90,6 +102,7 @@ class CylmarkerDetector(Node):
 def main():
     rclpy.init()
     detector = CylmarkerDetector()
+    detector.get_logger().log(detector.get_parameter('data_path').get_parameter_value().string_value, 20)
     image = detector.take_photo_usb_webcam(save_raw=True)
     #image = cv2.imread("/root/ros2_ws/src/irob-saf-ros2/2024-12-06-160510.jpg")
     detector.estimate(image)

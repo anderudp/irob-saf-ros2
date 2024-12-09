@@ -46,6 +46,7 @@ def get_marker_background_hsv(im_hsv, h_min, h_max, s_min, v_min):
     # Erode mask (given that we already have the biggest green contour)
     kernel = np.ones((3, 3), np.uint8)
     mask_marker_bg = cv.erode(mask_marker_bg, kernel, iterations = 3)
+    mask_marker_bg = cv.dilate(mask_marker_bg, kernel, iterations = 3)
 
     return mask_marker_bg, marker_area
 
