@@ -41,7 +41,7 @@ class CylmarkerDetector(Node):
         self.raw_images_path = self.data_path + "/raw_images/"
         self.processed_images_path = self.data_path + "/processed_images/"
         
-        self.image_stamp: Time = self.get_clock().now().to_msg()
+        self.image_stamp: Time = self.get_clock().now()
         
 
     def estimate(self, image: np.ndarray):
