@@ -2,7 +2,7 @@
 
 config_file_path = "/root/ros2_ws/src/irob-saf-ros2/irob_vision_support/config/cylmarker/config.yaml"
 images_path = "/root/ros2_ws/src/irob-saf-ros2/irob_vision_support/data/raw_images"
-img_format = ".png"
+img_format = ".jpg"
 
 import sys
 sys.path.append('/root/ros2_ws/src/irob-saf-ros2/irob_vision_support')
@@ -97,7 +97,10 @@ def improve_segmentation():
     try:
         img_paths = load_data.load_img_paths(images_path, img_format)
     except(FileNotFoundError):
-        raise FileNotFoundError(f"Could not find images at path {images_path}!")   
+        raise FileNotFoundError(f"Could not find images at path {images_path}!")
+
+    if len(img_paths) == 0:
+        raise FileNotFoundError(f"The image path exists, but no images were found! Are you sure the images are {img_format} files?")
     
     h_min = config_file_data['h_min']
     h_max = config_file_data['h_max']
