@@ -89,8 +89,16 @@ def improve_segmentation():
     global img_paths
 
     # Initialize values
-    config_file_data = load_data.load_yaml_data(config_file_path)
-    img_paths = load_data.load_img_paths(images_path, img_format)
+    try:
+        config_file_data = load_data.load_yaml_data(config_file_path)
+    except(FileNotFoundError):
+        raise FileNotFoundError(f"Could not find config file at path {config_file_path}!")
+    
+    try:
+        img_paths = load_data.load_img_paths(images_path, img_format)
+    except(FileNotFoundError):
+        raise FileNotFoundError(f"Could not find images at path {images_path}!")   
+    
     h_min = config_file_data['h_min']
     h_max = config_file_data['h_max']
     s_min = config_file_data['s_min']
