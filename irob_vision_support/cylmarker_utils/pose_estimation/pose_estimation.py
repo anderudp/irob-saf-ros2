@@ -171,7 +171,8 @@ def estimate_poses(image, cam_calib_data, config_file_data, data_pttrn, data_mar
     """ Step II - Segment the marker and detect features """
     mask_marker_bg, mask_marker_fg = img_segmentation.marker_segmentation(im, config_file_data, debug_im_path_stem)
     if mask_marker_bg is None:
-        raise Exception("Marker could not be detected. Your HSV range configuration may be insufficient.")
+        return None
+    #     raise Exception("Marker could not be detected. Your HSV range configuration may be insufficient.")
     
     if debug_im_path_stem is not None:
         cv.imwrite(debug_im_path_stem + "_mask_marker_bg.jpg", mask_marker_bg)
@@ -183,7 +184,8 @@ def estimate_poses(image, cam_calib_data, config_file_data, data_pttrn, data_mar
     """ Step III - Identify features """
     pttrn: Pattern = keypoints.find_keypoints(im, mask_marker_fg, config_file_data, sqnc_max_ind, sequence_length, data_pttrn, data_marker)
     if pttrn is None:
-        raise Exception("Pattern could not be sufficiently read. Your HSV range config, dot pattern threshold or sequence config may be incorrect.")
+        return None
+    #     raise Exception("Pattern could not be sufficiently read. Your HSV range config, dot pattern threshold or sequence config may be incorrect.")
 
     # Estimate pose
     # Draw contours and lines (for visualization)
@@ -197,7 +199,8 @@ def estimate_poses(image, cam_calib_data, config_file_data, data_pttrn, data_mar
     """ Step IV - Estimate the marker's pose """
     valid, rvec_pred, tvec_pred, inliers = cv.solvePnPRansac(pnts_3d_object, pnts_2d_image, cam_matrix, dist_coeff, None, None, False, 1000, 3.0, 0.9999, None, cv.SOLVEPNP_SQPNP)
     if not valid:
-        raise Exception("PnP solver failed. ")
+        return None
+    #     raise Exception("PnP solver failed. ")
     
     if debug_im_path_stem is not None:
         features_image = draw_detected_and_projected_features(rvec_pred, tvec_pred, cam_matrix, dist_coeff, pttrn, im)
@@ -208,6 +211,10 @@ def estimate_poses(image, cam_calib_data, config_file_data, data_pttrn, data_mar
         reproj_error = get_reprojection_error(pnts_3d_object, rvec_pred, tvec_pred, inliers, cam_matrix, dist_coeff, pnts_2d_image, show_reproj_error, im)
     rmat_pred, _ = cv.Rodrigues(rvec_pred)
     tvec_pred = tvec_pred * 0.001 # Change [mm] to [m]
+    
+    offset = np.array([[-0.017], [0.0], [0.0]])  # Bottom of cylinder to TCP
+    offset = np.dot(rmat_pred, offset)
+    tvec_pred += offset
     transf = np.concatenate((rmat_pred, tvec_pred), axis = 1)
     transf = np.vstack((transf, [0., 0., 0., 1.])) # Making it homogeneous
 

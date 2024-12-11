@@ -13,15 +13,16 @@ from scipy.spatial.transform import Slerp
 import yaml
 import matplotlib.pyplot as plt
 import time
+from rclpy.time import Time
 
 class HandEyeRegistrator(Node):
     def __init__(self):
         super().__init__('hand_eye_registrator')
 
-        self.arm = self.get_parameter('~arm')
-        self.camera_registration_filename = self.get_parameter('~camera_registration_file')
-        self.mode = self.get_parameter('~mode')    # simple, auto, save
-        self.poses_filename = self.get_parameter('~poses_filename')
+        self.arm = "PSM1" #self.get_parameter('~arm')
+        self.camera_registration_filename = "/root/ros2_ws/src/irob-saf-ros2/irob_vision_support/hand_eye_reg.cfg" #self.get_parameter('~camera_registration_file')
+        self.mode = "simple" #self.get_parameter('~mode')    # simple, auto, save
+        self.poses_filename = "" #self.get_parameter('~poses_filename')
 
         self.poses_to_save: list[PoseStamped] = []
         self.robot_positions = np.zeros((0,3))
@@ -85,7 +86,7 @@ class HandEyeRegistrator(Node):
     def gather_actual_position(self):
         """Gather a single position from the camera and the robot."""
         time.sleep(0.5)
-        if ((self.get_clock().now() - self.cylmarker_tf.header.stamp) < 4e8):  # 0.4s in nanosec
+        if self.cylmarker_tf.header.frame_id != "invalid": 
             robot_pos = np.array([self.measured_cp.pose.position.x,
                                 self.measured_cp.pose.position.y,
                                 self.measured_cp.pose.position.z]).T
@@ -233,8 +234,8 @@ class HandEyeRegistrator(Node):
         v -- TCP linear velocity
         dt -- sampling time
         """
-        input("Starting auto registration. The robot will do large movements. " +
-                                                    "Press Enter when ready...")
+        self.get_logger().log("Starting auto registration. The robot will do large movements. " +
+                                                    "Press Enter when ready...", 20)
         for t in self.poses_for_reg:
             self.move_tcp_to(t, v, dt)
             self.gather_actual_position()
@@ -244,28 +245,35 @@ class HandEyeRegistrator(Node):
         """Wait for data colection. When key pressed,
         do the registration.
         """
-        input("Collect data for registration. Press Enter when done...")
+        self.get_logger().log("Collecting poses...", 20)
+        rate = self.create_rate(10)
+        while rclpy.ok() and self.robot_positions.shape[0] < 3:
+            rclpy.spin_once(self)
+
+        print("Poses successfully collected!")
 
         R, t = rigid_transform_3D(self.cylmarker_positions.T, self.robot_positions.T)
         points_transformed = np.zeros(self.robot_positions.shape)
+
+        print("Poses successfully transformed into rigid tf")
 
         for i in range(self.robot_positions.shape[0]):
             p = np.dot(R, self.robot_positions[i,:].T) + t.T
             points_transformed[i,:] = p
         
         # Draw plot
-        plt.ion()
-        self.fig = plt.figure()
-        self.ax = self.fig.add_subplot(projection='3d')
-        self.ax.scatter(self.cylmarker_positions[0,:], self.cylmarker_positions[1,:], self.cylmarker_positions[2,:], marker='o')
-        self.ax.scatter(points_transformed[0,:], points_transformed[1,:], points_transformed[2,:], marker='^')
+        # plt.ion()
+        # self.fig = plt.figure()
+        # self.ax = self.fig.add_subplot(projection='3d')
+        # self.ax.scatter(self.cylmarker_positions[0,:], self.cylmarker_positions[1,:], self.cylmarker_positions[2,:], marker='o')
+        # self.ax.scatter(points_transformed[0,:], points_transformed[1,:], points_transformed[2,:], marker='^')
 
-        self.ax.set_xlabel('X')
-        self.ax.set_ylabel('Y')
-        self.ax.set_zlabel('Z')
+        # self.ax.set_xlabel('X')
+        # self.ax.set_ylabel('Y')
+        # self.ax.set_zlabel('Z')
 
-        self.fig.canvas.draw()
-        self.fig.canvas.flush_events()
+        # self.fig.canvas.draw()
+        # self.fig.canvas.flush_events()
         # Save robot poses for auto registration
         if self.mode == "save":
             self.save_robot_poses()
@@ -279,6 +287,7 @@ class HandEyeRegistrator(Node):
         R -- rotation matrix
         t -- translation vector
         """
+        print("Saving robot poses...")
         data = dict(
             t = [float(t[0,0]), float(t[1,0]), float(t[2,0])],
             R = [float(R[0,0]), float(R[0,1]), float(R[0,2]),
@@ -292,7 +301,7 @@ class HandEyeRegistrator(Node):
             input("Registration saved to file " + self.camera_registration_filename + ".")
 
 
-if __name__ == '__main__':
+def main():
     rclpy.init()
     reg = HandEyeRegistrator()
     dt = 0.01
@@ -305,6 +314,9 @@ if __name__ == '__main__':
         reg.save_registration(R, t)
     else:
         print("Please define a correct mode (simple, save, auto). Exiting...")
+
+if __name__ == '__main__':
+    main()
 
     # try:
     #     #rclpy.spin(reg)

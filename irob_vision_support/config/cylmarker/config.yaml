@@ -2,8 +2,8 @@
 #     Settings for pose estimation     #
 #         `python main.py`             #
 ########################################
-min_detected_sqnc: 4 # Minimum required: 2. You can change this value, 3 is also a good option.
-min_cntr_area_prcntg: 0.02 #3% of the marker area (reduce value if smaller keypoints are not being detected)
+min_detected_sqnc: 3 # Minimum required: 2. You can change this value, 3 is also a good option.
+min_cntr_area_prcntg: 0.075 #3% of the marker area (reduce value if smaller keypoints are not being detected)
 max_angle_diff_group: 1.5 # max angular difference (in degrees) between two keypoints in the same sequence
 max_angle_diff_label: 35.0 # to classify each blob as a 0 or a 1
 cyl_diameter_mm: 8.35 # WARNING: If changed you need to make a new marker `python main.py --task m`, so that the 3D positions are updated!

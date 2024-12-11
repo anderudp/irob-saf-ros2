@@ -24,7 +24,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'cylmarker_detector = irob_vision_support.cylmarker_detector:main'
+            'cylmarker_detector = irob_vision_support.cylmarker_detector:main',
+            'hand_eye_registrator = irob_vision_support.hand_eye_registrator:main'
         ],
     },
 )

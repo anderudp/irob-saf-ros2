@@ -69,21 +69,29 @@ class CylmarkerDetector(Node):
             data_config, 
             data_pattern, 
             data_marker, 
-            debug_im_path_stem=f"{self.processed_images_path}/{self.image_stamp.nanoseconds}")  # Set to None if debug images are not needed
+            debug_im_path_stem=f"{self.processed_images_path}/{self.image_stamp.nanoseconds}" # Set to None if debug images are not needed
+            )
 
         #self.get_logger().log(str(pose_pred), 20)
 
-        p = PoseStamped()
-        q = quaternion_from_matrix(pose_pred)
-        p.pose.orientation.x = q[0]
-        p.pose.orientation.y = q[1]
-        p.pose.orientation.z = q[2]
-        p.pose.orientation.w = q[3]
-        p.pose.position.x = pose_pred[0][3]
-        p.pose.position.y = pose_pred[1][3]
-        p.pose.position.z = pose_pred[2][3]
-        p.header.stamp = self.image_stamp.to_msg()
-        self.cylmarker_tf_pub.publish(p)
+        if pose_pred is None:
+            p = PoseStamped()
+            p.header.frame_id = "invalid"
+            self.cylmarker_tf_pub.publish(p)
+        else:
+            #self.get_logger().log(str(pose_pred), 20)
+
+            p = PoseStamped()
+            q = quaternion_from_matrix(pose_pred)
+            p.pose.orientation.x = q[0]
+            p.pose.orientation.y = q[1]
+            p.pose.orientation.z = q[2]
+            p.pose.orientation.w = q[3]
+            p.pose.position.x = pose_pred[0][3]
+            p.pose.position.y = pose_pred[1][3]
+            p.pose.position.z = pose_pred[2][3]
+            p.header.stamp = self.get_clock().now().to_msg()
+            self.cylmarker_tf_pub.publish(p)
 
 
     def take_photo_usb_webcam(self, save_raw: bool = False):
@@ -105,16 +113,21 @@ def main():
     rclpy.init()
     detector = CylmarkerDetector()
     #detector.get_logger().log(detector.get_parameter('data_path').get_parameter_value().string_value, 20)
-    image = detector.take_photo_usb_webcam(save_raw=True)
     #image = cv2.imread("/root/ros2_ws/src/irob-saf-ros2/irob_vision_support/data/raw_images/2024-12-06-160510.jpg")
-    detector.estimate(image)
-
+    rate = detector.create_rate(10)
     try:
-        rclpy.spin(detector)
+        while rclpy.ok():
+            image = detector.take_photo_usb_webcam(save_raw=False)
+            #image = cv2.imread("/root/ros2_ws/src/irob-saf-ros2/irob_vision_support/data/raw_images/2024-12-06-160510.jpg")
+            detector.estimate(image)
+            cv2.imshow("cylmarker", image)
+            cv2.waitKey(1)
+            rclpy.spin_once(detector)
     except (ExternalShutdownException, KeyboardInterrupt):
         pass
     finally:
         rclpy.try_shutdown()
+        cv2.destroyAllWindows()
 
 if __name__ == '__main__':
     main()
