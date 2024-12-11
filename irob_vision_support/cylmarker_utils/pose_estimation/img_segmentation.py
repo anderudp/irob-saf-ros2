@@ -22,7 +22,7 @@ def get_hsv_lower_and_upper(h_min, h_max, s_min, s_max, v_min, v_max):
     return np.array(lower, np.uint8), np.array(upper, np.uint8)
 
 
-def get_marker_background_hsv(im_hsv, h_min, h_max, s_min, v_min, debug_im_path_stem):
+def get_marker_background_hsv(im_hsv, h_min, h_max, s_min, v_min, debug_im_path_stem = None):
     h_min = h_min
     h_max = h_max
     s_min = s_min
@@ -41,14 +41,17 @@ def get_marker_background_hsv(im_hsv, h_min, h_max, s_min, v_min, debug_im_path_
     mask_marker_bg = np.zeros(mask_bg_colour.shape, np.uint8)
     cv.drawContours(mask_marker_bg, [c], -1, 255, -1)
     marker_area = cv.contourArea(c)
-    cv.imwrite(os.path.join(debug_im_path_stem, "contour_before_erode.jpg"), mask_marker_bg)
+    if debug_im_path_stem is not None:
+        cv.imwrite(os.path.join(debug_im_path_stem, "contour_before_erode.jpg"), mask_marker_bg)
 
     # Erode mask (given that we already have the biggest green contour)
     kernel = np.ones((3, 3), np.uint8)
     mask_marker_bg = cv.erode(mask_marker_bg, kernel, iterations = 3)
-    cv.imwrite(os.path.join(debug_im_path_stem, "contour_after_erode.jpg"), mask_marker_bg)
+    if debug_im_path_stem is not None:
+        cv.imwrite(os.path.join(debug_im_path_stem, "contour_after_erode.jpg"), mask_marker_bg)
     mask_marker_bg = cv.dilate(mask_marker_bg, kernel, iterations = 3)
-    cv.imwrite(os.path.join(debug_im_path_stem, "contour_after_dilate.jpg"), mask_marker_bg)
+    if debug_im_path_stem is not None:
+        cv.imwrite(os.path.join(debug_im_path_stem, "contour_after_dilate.jpg"), mask_marker_bg)
 
     return mask_marker_bg, marker_area
 

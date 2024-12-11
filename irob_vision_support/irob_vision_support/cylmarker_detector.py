@@ -32,7 +32,7 @@ class CylmarkerDetector(Node):
         self.declare_parameter('data_path', "")
         
         self.config_folder_path = self.get_parameter('config_folder_path').get_parameter_value().string_value
-        self.cam_calib_config_path = self.config_folder_path + "/camera_info/bark-logitech-c270.yaml"
+        self.cam_calib_config_path = self.config_folder_path + "/camera_info/pappad-jendoscope-aliexpress.yaml"
         self.cylmarker_config_path = self.config_folder_path + "/cylmarker/config.yaml"
         self.marker_config_path = self.config_folder_path + "/cylmarker/marker.yaml"
         self.pattern_config_path = self.config_folder_path + "/cylmarker/pattern.yaml"

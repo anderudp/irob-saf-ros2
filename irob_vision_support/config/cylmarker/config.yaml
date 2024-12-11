@@ -20,10 +20,10 @@ printing_paper_thickness_mm: 0.08 # standard 100 gsm paper
 #   h_min and h_max should be around the green color, usually around 60
 #   s_min -> you can lower this number if the marker has "white" regions due to specular highlights.
 #   v_min -> You can lower this when the marker is in low light conditions.
-h_min: 24
-h_max: 36
-s_min: 50
-v_min: 50
+h_min: 41
+h_max: 85
+s_min: 33
+v_min: 44
 
 # Value used for segmenting black dot pattern from green background. 
 # Set lower if dots are not being detected. Must be odd.
