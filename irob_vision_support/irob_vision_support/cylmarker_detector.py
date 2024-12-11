@@ -71,6 +71,8 @@ class CylmarkerDetector(Node):
             data_marker, 
             debug_ims_path=self.processed_images_path)  # Set to None if debug images are not needed
 
+        #self.get_logger().log(str(pose_pred), 20)
+
         p = PoseStamped()
         q = quaternion_from_matrix(pose_pred)
         p.pose.orientation.x = q[0]
@@ -102,9 +104,9 @@ class CylmarkerDetector(Node):
 def main():
     rclpy.init()
     detector = CylmarkerDetector()
-    detector.get_logger().log(detector.get_parameter('data_path').get_parameter_value().string_value, 20)
+    #detector.get_logger().log(detector.get_parameter('data_path').get_parameter_value().string_value, 20)
     image = detector.take_photo_usb_webcam(save_raw=True)
-    #image = cv2.imread("/root/ros2_ws/src/irob-saf-ros2/2024-12-06-160510.jpg")
+    #image = cv2.imread("/root/ros2_ws/src/irob-saf-ros2/irob_vision_support/data/raw_images/2024-12-06-160510.jpg")
     detector.estimate(image)
 
     try:

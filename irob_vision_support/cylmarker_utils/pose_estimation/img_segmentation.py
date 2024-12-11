@@ -1,6 +1,8 @@
 import cv2 as cv
 import numpy as np
 import matplotlib
+import os
+import time
 
 from matplotlib import pyplot as plt # For showing the histograms of the segmented marker
 
@@ -20,7 +22,7 @@ def get_hsv_lower_and_upper(h_min, h_max, s_min, s_max, v_min, v_max):
     return np.array(lower, np.uint8), np.array(upper, np.uint8)
 
 
-def get_marker_background_hsv(im_hsv, h_min, h_max, s_min, v_min):
+def get_marker_background_hsv(im_hsv, h_min, h_max, s_min, v_min, debug_ims_path):
     h_min = h_min
     h_max = h_max
     s_min = s_min
@@ -30,9 +32,6 @@ def get_marker_background_hsv(im_hsv, h_min, h_max, s_min, v_min):
     # Get lower and upper values
     lower, upper = get_hsv_lower_and_upper(h_min, h_max, s_min, s_max, v_min, v_max)
     mask_bg_colour = cv.inRange(im_hsv, lower, upper)
-    # Erode mask (remove noise, not sure if needed)
-    #kernel = np.ones((3, 3), np.uint8)
-    #mask_bg_colour = cv.erode(mask_bg_colour, kernel, iterations = 1)
 
     ## Get largest contour (to avoid returning noise as a potential marker)
     contours, _hierarchy = cv.findContours(mask_bg_colour, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
@@ -42,21 +41,24 @@ def get_marker_background_hsv(im_hsv, h_min, h_max, s_min, v_min):
     mask_marker_bg = np.zeros(mask_bg_colour.shape, np.uint8)
     cv.drawContours(mask_marker_bg, [c], -1, 255, -1)
     marker_area = cv.contourArea(c)
+    cv.imwrite(os.path.join(debug_ims_path, f"{time.time_ns()}_contour_before_erode.jpg"), mask_marker_bg)
 
     # Erode mask (given that we already have the biggest green contour)
     kernel = np.ones((3, 3), np.uint8)
     mask_marker_bg = cv.erode(mask_marker_bg, kernel, iterations = 3)
+    cv.imwrite(os.path.join(debug_ims_path, f"{time.time_ns()}_contour_after_erode.jpg"), mask_marker_bg)
     mask_marker_bg = cv.dilate(mask_marker_bg, kernel, iterations = 3)
+    cv.imwrite(os.path.join(debug_ims_path, f"{time.time_ns()}_contour_after_dilate.jpg"), mask_marker_bg)
 
     return mask_marker_bg, marker_area
 
-def get_marker_background(im_hsv, config_file_data):
+def get_marker_background(im_hsv, config_file_data, debug_ims_path):
     # Load background HSV data
     h_min = config_file_data['h_min']
     h_max = config_file_data['h_max']
     s_min = config_file_data['s_min']
     v_min = config_file_data['v_min']
-    return get_marker_background_hsv(im_hsv, h_min, h_max, s_min, v_min)
+    return get_marker_background_hsv(im_hsv, h_min, h_max, s_min, v_min, debug_ims_path)
 
 
 
@@ -126,18 +128,18 @@ def show_features(im, mask_marker_fg):
     return marker_fg
 
 
-def marker_segmentation(im, config_file_data, save_debug_ims = False):
+def marker_segmentation(im, config_file_data, debug_ims_path = None):
     #print(config_file_data)
     # Segment the marker assuming that it has a unique colour
     im_hsv = cv.cvtColor(im, cv.COLOR_BGR2HSV)
     #show_hsv_image(im_hsv)
-    mask_marker_bg, marker_area = get_marker_background(im_hsv, config_file_data)
+    mask_marker_bg, marker_area = get_marker_background(im_hsv, config_file_data, debug_ims_path)
     if mask_marker_bg is None:
         return None, None
     
     marker_bg = cv.bitwise_and(im, im, mask=mask_marker_bg)
-    if save_debug_ims:
-        cv.imwrite("03a_marker_bg.jpg", marker_bg)
+    if debug_ims_path is not None:
+        cv.imwrite(os.path.join(debug_ims_path, f"{time.time_ns()}_marker_bg.jpg"), marker_bg)
 
     marker_bg_hsv = cv.bitwise_and(im_hsv, im_hsv, mask=mask_marker_bg)
     #show_marker_histogram(im_hsv, mask_marker_bg)
