@@ -69,7 +69,7 @@ class CylmarkerDetector(Node):
             data_config, 
             data_pattern, 
             data_marker, 
-            debug_ims_path=self.processed_images_path)  # Set to None if debug images are not needed
+            debug_im_path_stem=f"{self.processed_images_path}/{self.image_stamp.nanoseconds}")  # Set to None if debug images are not needed
 
         #self.get_logger().log(str(pose_pred), 20)
 
@@ -96,7 +96,7 @@ class CylmarkerDetector(Node):
 
         self.image_stamp = self.get_clock().now()
         if save_raw:
-            cv2.imwrite(f"{self.raw_images_path}/{self.image_stamp.nanoseconds}_raw.png", frame)
+            cv2.imwrite(os.path.join(self.raw_images_path, f"{self.image_stamp.nanoseconds}_raw.jpg"), frame)
 
         return frame
     

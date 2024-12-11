@@ -141,15 +141,15 @@ def draw_detected_and_projected_features(rvecs, tvecs, cam_matrix, dist_coeff, p
     return im
 
 
-def estimate_poses(image, cam_calib_data, config_file_data, data_pttrn, data_marker, debug_ims_path = None):
+def estimate_poses(image, cam_calib_data, config_file_data, data_pttrn, data_marker, debug_im_path_stem = None):
     """Estimates the position of the marker.
     Returns its homogenous pose.
     """
     if image is None:
         raise Exception("Empty image provided.")
     
-    if debug_ims_path is not None:
-        cv.imwrite(os.path.join(debug_ims_path, f"{time.time_ns()}_read_image.jpg"), image)
+    if debug_im_path_stem is not None:
+        cv.imwrite(debug_im_path_stem + "_read_image.jpg", image)
     
     ## Load pattern data
     sqnc_max_ind = len(data_pttrn) - 1
@@ -165,17 +165,17 @@ def estimate_poses(image, cam_calib_data, config_file_data, data_pttrn, data_mar
     im = cv.undistort(image, cam_matrix, dist_coeff_np) # undistort each new image
     dist_coeff = None # we don't need to undistort again the same image
 
-    if debug_ims_path is not None:
-        cv.imwrite(os.path.join(debug_ims_path, f"{time.time_ns()}_undistorted_img.jpg"), im)
+    if debug_im_path_stem is not None:
+        cv.imwrite(debug_im_path_stem+"_undistorted_img.jpg", im)
 
     """ Step II - Segment the marker and detect features """
-    mask_marker_bg, mask_marker_fg = img_segmentation.marker_segmentation(im, config_file_data, debug_ims_path)
+    mask_marker_bg, mask_marker_fg = img_segmentation.marker_segmentation(im, config_file_data, debug_im_path_stem)
     if mask_marker_bg is None:
         raise Exception("Marker could not be detected.")
     
-    if debug_ims_path is not None:
-        cv.imwrite(os.path.join(debug_ims_path, f"{time.time_ns()}_mask_marker_bg.jpg"), mask_marker_bg)
-        cv.imwrite(os.path.join(debug_ims_path, f"{time.time_ns()}_mask_marker_fg.jpg"), mask_marker_fg)
+    if debug_im_path_stem is not None:
+        cv.imwrite(debug_im_path_stem + "_mask_marker_bg.jpg", mask_marker_bg)
+        cv.imwrite(debug_im_path_stem + "_mask_marker_fg.jpg", mask_marker_fg)
     
     # Draw segmented background and foreground
     #show_sgmntd_bg_and_fg(im, mask_marker_bg, mask_marker_fg)
@@ -183,13 +183,13 @@ def estimate_poses(image, cam_calib_data, config_file_data, data_pttrn, data_mar
     """ Step III - Identify features """
     pttrn: Pattern = keypoints.find_keypoints(im, mask_marker_fg, config_file_data, sqnc_max_ind, sequence_length, data_pttrn, data_marker)
     if pttrn is None:
-        raise Exception("Pattern could not be sufficiently read.")
+        raise Exception("Pattern could not be sufficiently read. Your HSV range configuration may be insufficient.")
 
     # Estimate pose
     # Draw contours and lines (for visualization)
-    if debug_ims_path is not None:
+    if debug_im_path_stem is not None:
         lines_countours_image = show_contours_and_lines_and_centroids(im, pttrn)
-        cv.imwrite(os.path.join(debug_ims_path, f"{time.time_ns()}_lines_countours_image.jpg"), lines_countours_image)
+        cv.imwrite(debug_im_path_stem + "_lines_countours_image.jpg", lines_countours_image)
 
     pnts_3d_object, pnts_2d_image = pttrn.get_data_for_pnp_solver()
     #save_pts_info(im_path, pnts_3d_object, pnts_2d_image)
@@ -199,9 +199,9 @@ def estimate_poses(image, cam_calib_data, config_file_data, data_pttrn, data_mar
     if not valid:
         raise Exception("PnP solver failed.")
     
-    if debug_ims_path is not None:
+    if debug_im_path_stem is not None:
         features_image = draw_detected_and_projected_features(rvec_pred, tvec_pred, cam_matrix, dist_coeff, pttrn, im)
-        cv.imwrite(os.path.join(debug_ims_path, f"{time.time_ns()}_features_image.jpg"), features_image)
+        cv.imwrite(debug_im_path_stem + "_features_image.jpg", features_image)
 
     show_reproj_error = False #True
     if show_reproj_error:
@@ -212,9 +212,9 @@ def estimate_poses(image, cam_calib_data, config_file_data, data_pttrn, data_mar
     transf = np.vstack((transf, [0., 0., 0., 1.])) # Making it homogeneous
 
     # Draw axis
-    if debug_ims_path is not None:
+    if debug_im_path_stem is not None:
         axis_image = show_axis(im, transf, rvec_pred, tvec_pred, cam_matrix, dist_coeff, 0.005)
-        cv.imwrite(os.path.join(debug_ims_path, f"{time.time_ns()}_axis_image.jpg"), axis_image)
+        cv.imwrite(debug_im_path_stem + "_axis_image.jpg", axis_image)
 
     # Save solution
     # save_pose(img_format, im_path, transf)
