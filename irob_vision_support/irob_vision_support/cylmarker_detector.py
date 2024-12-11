@@ -69,7 +69,7 @@ class CylmarkerDetector(Node):
             data_config, 
             data_pattern, 
             data_marker, 
-            debug_im_path_stem=f"{self.processed_images_path}/{self.image_stamp.nanoseconds}" # Set to None if debug images are not needed
+            debug_im_path_stem=f"{self.processed_images_path}/{self.image_stamp.nanoseconds}/" # Set to None if debug images are not needed
             )
 
         #self.get_logger().log(str(pose_pred), 20)
@@ -117,7 +117,7 @@ def main():
     rate = detector.create_rate(10)
     try:
         while rclpy.ok():
-            image = detector.take_photo_usb_webcam(save_raw=False)
+            image = detector.take_photo_usb_webcam(save_raw=True)
             #image = cv2.imread("/root/ros2_ws/src/irob-saf-ros2/irob_vision_support/data/raw_images/2024-12-06-160510.jpg")
             detector.estimate(image)
             cv2.imshow("cylmarker", image)

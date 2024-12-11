@@ -149,7 +149,8 @@ def estimate_poses(image, cam_calib_data, config_file_data, data_pttrn, data_mar
         raise Exception("Empty image provided.")
     
     if debug_im_path_stem is not None:
-        cv.imwrite(debug_im_path_stem + "_read_image.jpg", image)
+        os.makedirs(debug_im_path_stem)
+        cv.imwrite(os.path.join(debug_im_path_stem, "read_image.jpg"), image)
     
     ## Load pattern data
     sqnc_max_ind = len(data_pttrn) - 1
@@ -166,7 +167,7 @@ def estimate_poses(image, cam_calib_data, config_file_data, data_pttrn, data_mar
     dist_coeff = None # we don't need to undistort again the same image
 
     if debug_im_path_stem is not None:
-        cv.imwrite(debug_im_path_stem+"_undistorted_img.jpg", im)
+        cv.imwrite(os.path.join(debug_im_path_stem, "undistorted_img.jpg"), im)
 
     """ Step II - Segment the marker and detect features """
     mask_marker_bg, mask_marker_fg = img_segmentation.marker_segmentation(im, config_file_data, debug_im_path_stem)
@@ -175,8 +176,8 @@ def estimate_poses(image, cam_calib_data, config_file_data, data_pttrn, data_mar
     #     raise Exception("Marker could not be detected. Your HSV range configuration may be insufficient.")
     
     if debug_im_path_stem is not None:
-        cv.imwrite(debug_im_path_stem + "_mask_marker_bg.jpg", mask_marker_bg)
-        cv.imwrite(debug_im_path_stem + "_mask_marker_fg.jpg", mask_marker_fg)
+        cv.imwrite(os.path.join(debug_im_path_stem, "mask_marker_bg.jpg"), mask_marker_bg)
+        cv.imwrite(os.path.join(debug_im_path_stem, "mask_marker_fg.jpg"), mask_marker_fg)
     
     # Draw segmented background and foreground
     #show_sgmntd_bg_and_fg(im, mask_marker_bg, mask_marker_fg)
@@ -191,7 +192,7 @@ def estimate_poses(image, cam_calib_data, config_file_data, data_pttrn, data_mar
     # Draw contours and lines (for visualization)
     if debug_im_path_stem is not None:
         lines_countours_image = show_contours_and_lines_and_centroids(im, pttrn)
-        cv.imwrite(debug_im_path_stem + "_lines_countours_image.jpg", lines_countours_image)
+        cv.imwrite(os.path.join(debug_im_path_stem, "lines_countours_image.jpg"), lines_countours_image)
 
     pnts_3d_object, pnts_2d_image = pttrn.get_data_for_pnp_solver()
     #save_pts_info(im_path, pnts_3d_object, pnts_2d_image)
@@ -204,7 +205,7 @@ def estimate_poses(image, cam_calib_data, config_file_data, data_pttrn, data_mar
     
     if debug_im_path_stem is not None:
         features_image = draw_detected_and_projected_features(rvec_pred, tvec_pred, cam_matrix, dist_coeff, pttrn, im)
-        cv.imwrite(debug_im_path_stem + "_features_image.jpg", features_image)
+        cv.imwrite(os.path.join(debug_im_path_stem, "features_image.jpg"), features_image)
 
     show_reproj_error = False #True
     if show_reproj_error:
@@ -221,7 +222,7 @@ def estimate_poses(image, cam_calib_data, config_file_data, data_pttrn, data_mar
     # Draw axis
     if debug_im_path_stem is not None:
         axis_image = show_axis(im, transf, rvec_pred, tvec_pred, cam_matrix, dist_coeff, 0.005)
-        cv.imwrite(debug_im_path_stem + "_axis_image.jpg", axis_image)
+        cv.imwrite(os.path.join(debug_im_path_stem, "axis_image.jpg"), axis_image)
 
     # Save solution
     # save_pose(img_format, im_path, transf)

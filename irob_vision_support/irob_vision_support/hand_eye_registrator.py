@@ -247,7 +247,7 @@ class HandEyeRegistrator(Node):
         """
         self.get_logger().log("Collecting poses...", 20)
         rate = self.create_rate(10)
-        while rclpy.ok() and self.robot_positions.shape[0] < 3:
+        while rclpy.ok() and self.robot_positions.shape[0] < 15:
             rclpy.spin_once(self)
 
         print("Poses successfully collected!")
@@ -298,8 +298,12 @@ class HandEyeRegistrator(Node):
         with open(self.camera_registration_filename, 'w') as outfile:
             yaml.dump(data, outfile, default_flow_style=False)
             outfile.close()
-            input("Registration saved to file " + self.camera_registration_filename + ".")
+            #input("Registration saved to file " + self.camera_registration_filename + ".")
 
+        np.savetxt("/root/ros2_ws/src/irob-saf-ros2/irob_vision_support/robot_positions.txt", self.robot_positions)
+        np.savetxt("/root/ros2_ws/src/irob-saf-ros2/irob_vision_support/cylmarker_positions.txt", self.cylmarker_positions)
+        
+        input("Collection complete, data saved at /root/ros2_ws/src/irob-saf-ros2/irob_vision_support/")
 
 def main():
     rclpy.init()
