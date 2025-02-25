@@ -1,0 +1,14 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Source irob-saf components",
+        "type": "shell",
+        "command": "source /root/ros2_ws/install/setup.sh && source /opt/ros/foxy/setup.sh",
+        "runOptions": {
+          "runOn": "folderOpen"
+        },
+        "problemMatcher": []
+      }
+    ]
+  }
