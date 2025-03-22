@@ -23,7 +23,9 @@
         }
     },
     "remoteUser": "root",
-    "workspaceMount": "source=/root/ros2_ws/src/irob-saf-ros2,target=/root/ros2_ws/src/irob-saf-ros2,type=bind",
-    "workspaceFolder": "/root/ros2_ws/src/irob-saf-ros2",
-    "postCreateCommand": "cd /root/ros2_ws/ && colcon build --symlink-install"
+    // https://github.com/microsoft/vscode-remote-release/issues/3034
+    // Dev container refuses to clone the repository anywhere other than /workspace/irob-saf-ros2
+    // I symlinked this folder to the actual desired location as a workaround
+    // TODO: Update when a better solution is added as per the issue above
+    "postCreateCommand": "ln -s /workspaces/irob-saf-ros2 /root/ros2_ws/src || true && cd /root/ros2_ws/ && colcon build --symlink-install"
 }
