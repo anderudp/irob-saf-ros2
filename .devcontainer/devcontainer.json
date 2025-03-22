@@ -22,5 +22,8 @@
                 "matangover.mypy"
             ]
         }
-    }
+    },
+    "workspaceMount": "source=${localWorkspaceFolder},target=/root/ros2_ws/irob-saf-ros2,type=bind",
+    "workspaceFolder": "/root/ros2_ws/irob-saf-ros2",
+    "postCreateCommand": "cd /root/ros2_ws/ && colcon build --symlink-install"
 }

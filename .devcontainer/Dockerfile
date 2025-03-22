@@ -88,12 +88,6 @@ RUN apt-get install -y ros-foxy-realsense2-description ros-foxy-realsense2-camer
 
 RUN pip3 install scipy pyrealsense2 cv-bridge opencv-python natsort scikit-spatial parse tqdm svgwrite transforms3d mypy
 
-# Add ROS2 ports
-RUN mkdir -p /root/ros2_ws/src && \
-    cd /root/ros2_ws/src && \
-    git clone https://github.com/anderudp/irob-saf-ros2 && \
-    cd /root/ros2_ws/ && colcon build --symlink-install
-
 # Single quotes around EOF so the variables don't get mangled
 COPY --chmod=777 <<'EOF' /ros_entrypoint.sh
 #!/bin/bash
