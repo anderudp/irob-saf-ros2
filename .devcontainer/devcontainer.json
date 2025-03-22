@@ -3,7 +3,6 @@
     "build": {
         "dockerfile": "Dockerfile"
     },
-    "remoteUser": "root",
     // Configure tool-specific properties.
     "customizations": {
         // Configure properties specific to VS Code.
@@ -23,8 +22,8 @@
             ]
         }
     },
-    "overrideCommand": false,
-    "workspaceMount": "source=${localWorkspaceFolder},target=/root/ros2_ws/src/irob-saf-ros2,type=bind",
+    "remoteUser": "root",
+    "workspaceMount": "source=/root/ros2_ws/src/irob-saf-ros2,target=/root/ros2_ws/src/irob-saf-ros2,type=bind",
     "workspaceFolder": "/root/ros2_ws/src/irob-saf-ros2",
     "postCreateCommand": "cd /root/ros2_ws/ && colcon build --symlink-install"
 }
