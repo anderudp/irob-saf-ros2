@@ -61,7 +61,7 @@ RUN mkdir -p /root/catkin_ws/src && \
 WORKDIR /root/catkin_ws/
 RUN mkdir src/irob-saf
 COPY . ./src/irob-saf
-RUN cd /root/catkin_ws/ && catkin build irob-saf
+RUN cd /root/catkin_ws/ && catkin build
 
 # Add OE daVinci config files
 RUN cd /root/catkin_ws/src/cisst-saw/sawIntuitiveResearchKit/share/ && \
