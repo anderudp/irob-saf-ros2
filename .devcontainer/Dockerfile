@@ -88,6 +88,8 @@ RUN apt-get install -y ros-foxy-realsense2-description ros-foxy-realsense2-camer
 
 RUN pip3 install scipy pyrealsense2 cv-bridge opencv-python natsort scikit-spatial parse tqdm svgwrite transforms3d mypy
 
+RUN mkdir -p /root/ros2_ws/src
+
 # Single quotes around EOF so the variables don't get mangled
 COPY --chmod=777 <<'EOF' /ros_entrypoint.sh
 #!/bin/bash
