@@ -16,5 +16,6 @@
         "/root/ros2_ws/build/irob_subtask_logic",
         "/root/ros2_ws/install/irob_subtask_logic/lib/python3.8/site-packages",
         "/opt/ros/foxy/lib/python3.8/site-packages"
-    ]
+    ],
+    "pylint.args": ["--disable=line-too-long,invalid-name"]
 }

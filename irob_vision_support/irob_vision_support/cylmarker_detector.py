@@ -1,13 +1,13 @@
-# Cylindrical marker hand-eye calibration
-# Based on "An Enhanced Marker Pattern that Achieves 
-# Improved Accuracy in Surgical Tool Tracking"
-# (Cartucho et al., 2021)
+"""Cylindrical marker hand-eye calibration
+Based on "An Enhanced Marker Pattern that Achieves Improved Accuracy in Surgical Tool Tracking"
+(Cartucho et al., 2021)"""
 
 import numpy as np
 import rclpy
 import cv2
 import os
 import rclpy.logging
+from rclpy.time import Time
 from rclpy.node import Node
 from rclpy.executors import ExternalShutdownException
 from geometry_msgs.msg import PoseStamped
@@ -16,30 +16,24 @@ import matplotlib.pyplot as plt
 from cylmarker_utils.load_data import load_config_and_cam_calib_data, load_pttrn_and_marker_data
 from cylmarker_utils.pose_estimation import pose_estimation
 from tf_transformations import quaternion_from_matrix
-from rclpy.time import Time
 
 
 class CylmarkerDetector(Node):
     def __init__(self):
         super().__init__('cylmarker_detector')
 
+        self.registration_id = self.get_parameter("registration_id").get_parameter_value().string_value
+        self.detector_images_dir_path = self.get_parameter('detector_images_dir_path').get_parameter_value().string_value
+        self.cam_calib_file_path = self.get_parameter('cam_calib_file_path').get_parameter_value().string_value
+        self.detector_config_file_path = self.get_parameter('detector_config_file_path').get_parameter_value().string_value
+        self.marker_config_file_path = self.get_parameter('marker_config_file_path').get_parameter_value().string_value
+        self.pattern_config_file_path = self.get_parameter('pattern_config_file_path').get_parameter_value().string_value
+
         self.cylmarker_tf_pub = self.create_publisher(
             PoseStamped,
             "cylmarker_tf",
-            10)
-        
-        self.declare_parameter('config_folder_path', "")
-        self.declare_parameter('data_path', "")
-        
-        self.config_folder_path = self.get_parameter('config_folder_path').get_parameter_value().string_value
-        self.cam_calib_config_path = self.config_folder_path + "/camera_info/pappad-jendoscope-aliexpress.yaml"
-        self.cylmarker_config_path = self.config_folder_path + "/cylmarker/config.yaml"
-        self.marker_config_path = self.config_folder_path + "/cylmarker/marker.yaml"
-        self.pattern_config_path = self.config_folder_path + "/cylmarker/pattern.yaml"
-
-        self.data_path = self.get_parameter('data_path').get_parameter_value().string_value
-        self.raw_images_path = self.data_path + "/raw_images/"
-        self.processed_images_path = self.data_path + "/processed_images/"
+            10
+        )
 
         # Ensure image folders exist
         if not os.path.exists(self.raw_images_path):
@@ -56,12 +50,12 @@ class CylmarkerDetector(Node):
         """
 
         data_config, data_cam_calib = load_config_and_cam_calib_data(
-            config_file_path=self.cylmarker_config_path, 
-            cam_calib_file_path=self.cam_calib_config_path)
+            config_file_path=self.detector_config_file_path, 
+            cam_calib_file_path=self.cam_calib_file_path)
         
         data_pattern, data_marker = load_pttrn_and_marker_data(
-            pttrn_file_path=self.pattern_config_path,
-            marker_file_path=self.marker_config_path)
+            pttrn_file_path=self.pattern_config_file_path,
+            marker_file_path=self.marker_config_file_path)
 
         pose_pred = pose_estimation.estimate_poses(
             image, 
@@ -114,7 +108,6 @@ def main():
     detector = CylmarkerDetector()
     #detector.get_logger().log(detector.get_parameter('data_path').get_parameter_value().string_value, 20)
     #image = cv2.imread("/root/ros2_ws/src/irob-saf-ros2/irob_vision_support/data/raw_images/2024-12-06-160510.jpg")
-    rate = detector.create_rate(10)
     try:
         while rclpy.ok():
             image = detector.take_photo_usb_webcam(save_raw=True)
@@ -128,6 +121,7 @@ def main():
     finally:
         rclpy.try_shutdown()
         cv2.destroyAllWindows()
+
 
 if __name__ == '__main__':
     main()
