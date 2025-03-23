@@ -1,18 +1,34 @@
 {
     "name": "irob-saf-ros2",
+    "privileged": true,
     "build": {
         "dockerfile": "Dockerfile"
     },
-    // Configure tool-specific properties.
+    "remoteUser": "root",
+    "runArgs": [
+        "--tty",
+        "--interactive",
+        "--name", "irob-saf-ros2"
+    ],
+    "containerEnv": {
+        "DISPLAY": "${localEnv:DISPLAY}",
+        "QT_X11_NO_MITSHM": "1"
+    },
+    "mounts": [
+        "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,consistency=consistent",
+        "source=/dev,target=/dev,type=bind"  // TODO: Minor security risk. Container can access all host device files. This should ideally be restricted to the FireWire ports used by the dVRK and whatever USB devices are used
+    ],
+    // https://github.com/microsoft/vscode-remote-release/issues/3034
+    // Dev container refuses to clone the repository anywhere other than /workspace/irob-saf-ros2
+    // I symlinked this folder to the actual desired location as a workaround
+    // TODO: Update when a better solution is added as per the issue above
+    "postCreateCommand": "ln -s /workspaces/irob-saf-ros2 /root/ros2_ws/src || true",
     "customizations": {
-        // Configure properties specific to VS Code.
         "vscode": {
-            // Set *default* container specific settings.json values on container create.
             "settings": { 
                 "extensions.autoUpdate": false
             },
             
-            // Add the IDs of extensions you want installed when the container is created.
             "extensions": [
                 "ms-python.python",
                 "ms-python.pylint@2024.2.0",  // 2025.* onwards requires Python>=3.9
@@ -21,11 +37,5 @@
                 "matangover.mypy"
             ]
         }
-    },
-    "remoteUser": "root",
-    // https://github.com/microsoft/vscode-remote-release/issues/3034
-    // Dev container refuses to clone the repository anywhere other than /workspace/irob-saf-ros2
-    // I symlinked this folder to the actual desired location as a workaround
-    // TODO: Update when a better solution is added as per the issue above
-    "postCreateCommand": "ln -s /workspaces/irob-saf-ros2 /root/ros2_ws/src || true && cd /root/ros2_ws/ && colcon build --symlink-install"
+    }
 }

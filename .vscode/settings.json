@@ -17,6 +17,6 @@
         "/root/ros2_ws/install/irob_subtask_logic/lib/python3.8/site-packages",
         "/opt/ros/foxy/lib/python3.8/site-packages"
     ],
-    "terminal.integrated.cwd": "/root/ros2_ws/src/irob-saf-ros2",
+    "terminal.integrated.cwd": "/root/ros2_ws",
     "pylint.args": ["--disable=line-too-long,invalid-name"]
 }
