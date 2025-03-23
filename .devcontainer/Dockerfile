@@ -86,7 +86,7 @@ RUN mkdir -p /etc/apt/keyrings && \
 
 RUN apt-get install -y ros-foxy-realsense2-description ros-foxy-realsense2-camera
 
-RUN pip3 install scipy pyrealsense2 cv-bridge opencv-python natsort scikit-spatial parse tqdm svgwrite transforms3d mypy
+RUN pip3 install scipy pyrealsense2 cv-bridge opencv-python natsort scikit-spatial parse tqdm svgwrite transforms3d
 
 RUN mkdir -p /root/ros2_ws/src
 

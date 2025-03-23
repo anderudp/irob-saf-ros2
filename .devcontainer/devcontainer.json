@@ -31,10 +31,8 @@
             
             "extensions": [
                 "ms-python.python",
-                "ms-python.pylint@2024.2.0",  // 2025.* onwards requires Python>=3.9
                 "ms-python.vscode-pylance",
-                "ms-python.debugpy",
-                "matangover.mypy"
+                "ms-python.debugpy"
             ]
         }
     }
