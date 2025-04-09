@@ -2,23 +2,27 @@
 Based on "An Enhanced Marker Pattern that Achieves Improved Accuracy in Surgical Tool Tracking"
 (Cartucho et al., 2021)"""
 
-import numpy as np
-import rclpy
-import cv2
 import os
+import numpy as np
+import numpy.typing as npt
+import rclpy
 import rclpy.logging
+import cv2
 from rclpy.time import Time
 from rclpy.node import Node
 from rclpy.executors import ExternalShutdownException
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, Pose, Point, Quaternion
+from std_msgs.msg import Header
 from cv_bridge import CvBridge
 import matplotlib.pyplot as plt
 from cylmarker_utils.load_data import load_config_and_cam_calib_data, load_pttrn_and_marker_data
 from cylmarker_utils.pose_estimation import pose_estimation
 from tf_transformations import quaternion_from_matrix
+from irob_utils.conversions import arr_to_pose
 
 
 class CylmarkerDetector(Node):
+    """Detects the cylindrical marker and publishes its pose in camera space"""
     def __init__(self):
         super().__init__('cylmarker_detector')
 
@@ -29,62 +33,56 @@ class CylmarkerDetector(Node):
         self.marker_config_file_path = self.get_parameter('marker_config_file_path').get_parameter_value().string_value
         self.pattern_config_file_path = self.get_parameter('pattern_config_file_path').get_parameter_value().string_value
 
+        self.im_path_stem = os.path.join(self.detector_images_dir_path, self.registration_id)
         self.cylmarker_tf_pub = self.create_publisher(
             PoseStamped,
             "cylmarker_tf",
             10
         )
 
-        # Ensure image folders exist
-        if not os.path.exists(self.raw_images_path):
-            os.makedirs(self.raw_images_path)
-        if not os.path.exists(self.processed_images_path):
-            os.makedirs(self.processed_images_path)
-        
-        self.image_stamp: Time = self.get_clock().now()
-        
 
-    def estimate(self, image: np.ndarray):
+    def estimate(self, image: npt.NDArray):
         """Attempts pose estimation on the raw image,
         then publishes the result.
         """
 
         data_config, data_cam_calib = load_config_and_cam_calib_data(
-            config_file_path=self.detector_config_file_path, 
-            cam_calib_file_path=self.cam_calib_file_path)
-        
+            config_file_path=self.detector_config_file_path,
+            cam_calib_file_path=self.cam_calib_file_path
+        )
+
         data_pattern, data_marker = load_pttrn_and_marker_data(
             pttrn_file_path=self.pattern_config_file_path,
-            marker_file_path=self.marker_config_file_path)
+            marker_file_path=self.marker_config_file_path
+        )
 
         pose_pred = pose_estimation.estimate_poses(
-            image, 
-            data_cam_calib, 
-            data_config, 
-            data_pattern, 
-            data_marker, 
-            debug_im_path_stem=f"{self.processed_images_path}/{self.image_stamp.nanoseconds}/" # Set to None if debug images are not needed
-            )
-
-        #self.get_logger().log(str(pose_pred), 20)
+            image,
+            data_cam_calib,
+            data_config,
+            data_pattern,
+            data_marker,
+            debug_im_path_stem=self.im_path_stem # Set to None if debug images are not needed
+        )
 
         if pose_pred is None:
-            p = PoseStamped()
-            p.header.frame_id = "invalid"
+            h = Header(
+                stamp=self.get_clock().now().to_msg(),
+                frame_id="invalid"
+            )
+            p = PoseStamped(header=h)
             self.cylmarker_tf_pub.publish(p)
         else:
-            #self.get_logger().log(str(pose_pred), 20)
-
-            p = PoseStamped()
-            q = quaternion_from_matrix(pose_pred)
-            p.pose.orientation.x = q[0]
-            p.pose.orientation.y = q[1]
-            p.pose.orientation.z = q[2]
-            p.pose.orientation.w = q[3]
-            p.pose.position.x = pose_pred[0][3]
-            p.pose.position.y = pose_pred[1][3]
-            p.pose.position.z = pose_pred[2][3]
-            p.header.stamp = self.get_clock().now().to_msg()
+            h = Header(
+                stamp=self.get_clock().now().to_msg(),
+                frame_id=self.registration_id
+            )
+            pos = pose_pred[:3, 3]
+            rot = np.array(quaternion_from_matrix(pose_pred))
+            p = PoseStamped(
+                header=h,
+                pose=arr_to_pose(np.concatenate((pos, rot)))
+            )
             self.cylmarker_tf_pub.publish(p)
 
 
@@ -98,7 +96,7 @@ class CylmarkerDetector(Node):
 
         self.image_stamp = self.get_clock().now()
         if save_raw:
-            cv2.imwrite(os.path.join(self.raw_images_path, f"{self.image_stamp.nanoseconds}_raw.jpg"), frame)
+            cv2.imwrite(os.path.join(self.im_path_stem, "raw.jpg"), frame)
 
         return frame
     

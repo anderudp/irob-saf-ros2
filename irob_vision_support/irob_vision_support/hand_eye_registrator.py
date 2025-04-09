@@ -1,4 +1,4 @@
-"""Utilities for hand-eye registration"""
+"""Utilities for hand-eye registration using a Cartucho et al. (2021) cylindrical marker"""
 
 import os
 import math
@@ -19,10 +19,11 @@ from geometry_msgs.msg import PoseStamped, Pose, Point, Quaternion
 from scipy.spatial.distance import euclidean
 from scipy.spatial.transform import Slerp
 from irob_utils.rigid_transform_3D import rigid_transform_3D
+from irob_utils.conversions import arr_to_pose, pose_to_arr
 
 
 class HandEyeRegistrator(Node):
-    """Performs hand-eye registration using a Cartucho et al. (2021) cylindrical marker"""
+    """Coordinates the registration process, and finds the transform between camera and joint spaces"""
 
     def __init__(self):
         super().__init__("hand_eye_registrator")
@@ -109,10 +110,10 @@ class HandEyeRegistrator(Node):
         """Gather a single position from the camera and the robot."""
         if self.cylmarker_tf.header.frame_id != "invalid":
             self.gathered_robot_poses = np.vstack(
-                (self.gathered_robot_poses, self.pose_to_arr(self.measured_cp.pose))
+                (self.gathered_robot_poses, pose_to_arr(self.measured_cp.pose))
             )
             self.gathered_cylmarker_poses = np.vstack(
-                (self.gathered_cylmarker_poses, self.pose_to_arr(self.cylmarker_tf.pose))
+                (self.gathered_cylmarker_poses, pose_to_arr(self.cylmarker_tf.pose))
             )
 
             self.get_logger().info(
@@ -134,46 +135,6 @@ class HandEyeRegistrator(Node):
         )
         self.move_tcp_to(Pose(position=pos, orientation=ori))
 
-    # TODO: Add assertion to array size if numpy>=2.1.0 support is added as per https://github.com/numpy/numpy/pull/26081
-    def arr_to_pose(self, arr_in: npt.NDArray) -> Pose:
-        """Converts a Numpy array into a Pose object.
-
-        Args:
-            arr_in (NDArray): Array to convert to a Pose. Must be 1 dimensional and of length 7
-
-        Returns:
-            geometry_msgs/Pose: The converted Pose object
-        """
-        arr_in = arr_in.flatten()
-        if arr_in.size != 7:
-            msg = f"Cannot convert specified array to Pose. Expected array of length 7, got {arr_in.size}"
-            self.get_logger().error(msg)
-            raise ValueError(msg)
-
-        new_pos = Point(x=arr_in[0], y=arr_in[1], z=arr_in[2])
-        new_ori = Quaternion(x=arr_in[3], y=arr_in[4], z=arr_in[5], w=arr_in[6])
-        return Pose(position=new_pos, orientation=new_ori)
-
-    def pose_to_arr(self, pose_in: Pose) -> npt.NDArray:
-        """Converts a Pose int a Numpy array of length 7.
-
-        Args:
-            pose_in (geometry_msgs/Pose): Pose to convert to an array.
-
-        Returns:
-            A 7-long array representing the pose
-        """
-        return np.array(
-            [
-                pose_in.position.x,
-                pose_in.position.y,
-                pose_in.position.z,
-                pose_in.orientation.x,
-                pose_in.orientation.y,
-                pose_in.orientation.z,
-                pose_in.orientation.w,
-            ]
-        )
 
     def move_tcp_to(self, target: npt.NDArray):
         """Move the TCP to the desired pose on linear trajectory.
@@ -184,7 +145,7 @@ class HandEyeRegistrator(Node):
         while self.measured_cp is None:
             rclpy.spin_once(self)
 
-        start = self.pose_to_arr(self.measured_cp.pose)
+        start = pose_to_arr(self.measured_cp.pose)
 
         start_pos, start_ori = start[:3], start[3:]
         target_pos, target_ori = target[:3], target[3:]
@@ -204,7 +165,7 @@ class HandEyeRegistrator(Node):
 
         try:
             while i := 0 < pub_count and rclpy.ok():
-                next_pose = self.arr_to_pose(np.concatenate((interp_pos[i], interp_rot[i])))
+                next_pose = arr_to_pose(np.concatenate((interp_pos[i], interp_rot[i])))
                 next_header = Header(stamp=self.get_clock().now().to_msg())
                 self.servo_cp_pub.publish(PoseStamped(header=next_header, pose=next_pose))
 
